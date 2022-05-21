@@ -1,0 +1,13 @@
+{
+  "outDir": "src/types",
+  "chainVersions": "kintsugiVersions.json",
+  "typesBundle": "kintsugi",
+  "events": [
+    "tokens.Transfer",
+    "xTokens.TransferredMultiCurrencies",
+    "xTokens.TransferredWithFee",
+    "xTokens.TransferredMultiAssetWithFee",
+    "xTokens.TransferredMultiAssets"
+  ],
+  "calls": []
+}

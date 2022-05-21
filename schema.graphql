@@ -1,0 +1,47 @@
+type Account @entity {
+  "Account address"
+  id: ID!
+}
+
+enum Token {
+    DOT
+    INTR
+    KSM
+    KINT
+    IBTC
+    KBTC
+}
+
+"Mapping of parachain raw/absolute blocks to parachain active blocks"
+type Height @entity {
+    id: ID!
+    "Should be equal to the absolute value, for determinism"
+    absolute: Int! @index
+    active: Int!
+}
+
+
+type Transfer @entity {
+    "A token transfer"
+    id: ID!
+    token: Token!
+    from: Account!
+    to: Account!
+    height: Height!
+    timestamp: DateTime!
+    amount: BigInt!
+}
+
+type XTransfer @entity {
+    "A cross-chain token transfer"
+    id: ID!
+    token: Token!
+    from: Account!
+    fromChain: Int!
+    to: Account!
+    toChain: Int!
+    height: Height!
+    timestamp: DateTime!
+    amount: BigInt!
+}
+
