@@ -8,7 +8,7 @@ import {
   XTokensTransferredWithFeeEvent,
   TokensTransferEvent
 } from "./types/events";
-import { Account, Height, Token, Transfer, XTransfer } from "./model";
+import { Account, Height, Token, Transfer } from "./model";
 import { CurrencyId_Token as CurrencyId_TokenV6 } from "./types/v6";
 import { CurrencyId_Token as CurrencyId_TokenV15 } from "./types/v15";
 import * as ss58 from "@subsquid/ss58";
@@ -16,6 +16,28 @@ import { LessThanOrEqual } from "typeorm";
 import { debug } from "util";
 
 require("dotenv").config()
+import * as util from "@polkadot/util-crypto"
+//const util = require("@polkadot/util-crypto");
+
+const prefixes = {
+  polkadot: 0,
+  kusama: 2,
+  plasm: 5,
+  bifrost: 6,
+  edgeware: 7,
+  karura: 8,
+  reynolds: 9,
+  acala: 10,
+  laminar: 11,
+  substratee: 13,
+  kulupu: 16,
+  darwinia: 18,
+  robonomics: 32,
+  centrifuge: 36,
+  substrate: 42,
+  chainx: 44
+};
+
 
 const processor = new SubstrateProcessor(
   "kintsugi"
@@ -69,14 +91,25 @@ processor.addEventHandler("tokens.Transfer", async (ctx) => {
   const to = ss58.codec("kintsugi").encode(e.to);
 
   const fromAcc = await getOrCreate(ctx.store, Account, from);
+  fromAcc['kintsugi'] = ss58.codec("kintsugi").encode(e.from);
+  fromAcc['karura'] = ss58.codec("karura").encode(e.from);
+  fromAcc['kusama'] = ss58.codec("kusama").encode(e.from);
+  fromAcc['moonriver'] = '0x' + Buffer.from(util.addressToEvm(util.encodeAddress(e.from))).toString('hex');
   await ctx.store.save(fromAcc);
+
   const toAcc = await getOrCreate(ctx.store, Account, to);
+  toAcc['kintsugi'] = ss58.codec("kintsugi").encode(e.to);
+  toAcc['karura'] = ss58.codec("karura").encode(e.to);
+  toAcc['kusama'] = ss58.codec("kusama").encode(e.to);
+  toAcc['moonriver'] = '0x' + Buffer.from(util.addressToEvm(util.encodeAddress(e.to))).toString('hex');
   await ctx.store.save(toAcc);
 
   const id = `${ctx.event.id}-transfer`;
   const myTransfer = await getOrCreate(ctx.store, Transfer, id) as Transfer;
   myTransfer.from = fromAcc;
+  myTransfer.fromChain = 2092;
   myTransfer.to = toAcc;
+  myTransfer.toChain = 2092;
   myTransfer.height = height;
   myTransfer.timestamp = new Date(ctx.block.timestamp);
   myTransfer.token = currencyId.token.encode(e.currencyId)
@@ -165,7 +198,7 @@ processor.addEventHandler("xTokens.TransferredMultiAssets", async (ctx) => {
   await ctx.store.save(fromAcc);
 
   const id = `${ctx.event.id}-xtransfer`;
-  const myTransfer = await getOrCreate(ctx.store, XTransfer, id);
+  const myTransfer = await getOrCreate(ctx.store, Transfer, id);
   myTransfer.from = fromAcc;
   myTransfer.height = height;
   myTransfer.timestamp = new Date(ctx.block.timestamp);
@@ -176,11 +209,13 @@ processor.addEventHandler("xTokens.TransferredMultiAssets", async (ctx) => {
       if (details.value[0].__kind === 'Parachain') {
         const my_parachain = details.value[0];
         const to_details = details.value[1] as V1Junction_AccountId32 | V1Junction_AccountKey20;
+        // Karura
         if (to_details.__kind === 'AccountId32' && my_parachain.value === 2000) {
           myTransfer.toChain = my_parachain.value;
           myTransfer.token = myToken;
           myTransfer.amount = (e.assets[0].fun.value) as bigint
-          const toAccount = ss58.codec("karura").encode(to_details.id);
+          const toAccount = ss58.codec("kintsugi").encode(to_details.id);
+          // we use kintsugi address as the main address and assume karura address has been saved already
           myTransfer.to = await getOrCreate(ctx.store, Account, toAccount);
           await ctx.store.save(myTransfer.to);
           console.log(`${fromAcc.id} -> ${myTransfer.to.id} ${myTransfer.token}`);
@@ -193,7 +228,9 @@ processor.addEventHandler("xTokens.TransferredMultiAssets", async (ctx) => {
           myTransfer.token = myToken;
           myTransfer.amount = (e.assets[0].fun.value) as bigint;
           const toAccount = '0x' + Buffer.from(to_details.key).toString('hex');
+          const substrate = util.evmToAddress(to_details.key)
           myTransfer.to = await getOrCreate(ctx.store, Account, toAccount);
+          myTransfer.to['kusama'] = 'unknown'
           await ctx.store.save(myTransfer.to);
           console.log(`${fromAcc.id} -> ${e.assets[0].fun.value} ${myTransfer.token}`);
           myTransfer.id = id;

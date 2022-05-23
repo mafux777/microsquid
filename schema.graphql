@@ -1,6 +1,10 @@
 type Account @entity {
   "Account address"
   id: ID!
+  kintsugi: String
+  karura: String
+  kusama: String
+  moonriver: String
 }
 
 enum Token {
@@ -22,17 +26,6 @@ type Height @entity {
 
 
 type Transfer @entity {
-    "A token transfer"
-    id: ID!
-    token: Token!
-    from: Account!
-    to: Account!
-    height: Height!
-    timestamp: DateTime!
-    amount: BigInt!
-}
-
-type XTransfer @entity {
     "A cross-chain token transfer"
     id: ID!
     token: Token!

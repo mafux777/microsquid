@@ -11,7 +11,7 @@ export class Transfer {
   }
 
   /**
-   * A token transfer
+   * A cross-chain token transfer
    */
   @PrimaryColumn_()
   id!: string
@@ -23,9 +23,15 @@ export class Transfer {
   @ManyToOne_(() => Account, {nullable: false})
   from!: Account
 
+  @Column_("int4", {nullable: false})
+  fromChain!: number
+
   @Index_()
   @ManyToOne_(() => Account, {nullable: false})
   to!: Account
+
+  @Column_("int4", {nullable: false})
+  toChain!: number
 
   @Index_()
   @ManyToOne_(() => Height, {nullable: false})

@@ -11,4 +11,16 @@ export class Account {
    */
   @PrimaryColumn_()
   id!: string
+
+  @Column_("text", {nullable: true})
+  kintsugi!: string | undefined | null
+
+  @Column_("text", {nullable: true})
+  karura!: string | undefined | null
+
+  @Column_("text", {nullable: true})
+  kusama!: string | undefined | null
+
+  @Column_("text", {nullable: true})
+  moonriver!: string | undefined | null
 }
